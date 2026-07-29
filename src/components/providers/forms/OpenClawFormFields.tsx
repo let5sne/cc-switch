@@ -47,6 +47,7 @@ interface OpenClawFormFieldsProps {
   // Base URL
   baseUrl: string;
   onBaseUrlChange: (value: string) => void;
+  baseUrlReadOnly?: boolean;
 
   // API Key
   apiKey: string;
@@ -73,6 +74,7 @@ interface OpenClawFormFieldsProps {
 export function OpenClawFormFields({
   baseUrl,
   onBaseUrlChange,
+  baseUrlReadOnly = false,
   apiKey,
   onApiKeyChange,
   category,
@@ -244,6 +246,7 @@ export function OpenClawFormFields({
           id="openclaw-baseurl"
           value={baseUrl}
           onChange={(e) => onBaseUrlChange(e.target.value)}
+          readOnly={baseUrlReadOnly}
           placeholder="https://api.example.com/v1"
         />
         <p className="text-xs text-muted-foreground">

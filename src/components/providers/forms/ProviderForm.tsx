@@ -2202,6 +2202,7 @@ function ProviderFormFull({
               shouldShowSpeedTest={shouldShowSpeedTest}
               baseUrl={baseUrl}
               onBaseUrlChange={handleClaudeBaseUrlChange}
+              baseUrlReadOnly={selectedPresetId === SUB2API_PRESET_ID}
               isEndpointModalOpen={isEndpointModalOpen}
               onEndpointModalToggle={setIsEndpointModalOpen}
               onCustomEndpointsChange={
@@ -2258,6 +2259,7 @@ function ProviderFormFull({
               shouldShowSpeedTest={shouldShowSpeedTest}
               codexBaseUrl={codexBaseUrl}
               onBaseUrlChange={handleCodexBaseUrlChange}
+              baseUrlReadOnly={selectedPresetId === SUB2API_PRESET_ID}
               isFullUrl={localIsFullUrl}
               onFullUrlChange={setLocalIsFullUrl}
               isEndpointModalOpen={isCodexEndpointModalOpen}
@@ -2310,6 +2312,7 @@ function ProviderFormFull({
               shouldShowSpeedTest={shouldShowSpeedTest}
               baseUrl={geminiBaseUrl}
               onBaseUrlChange={handleGeminiBaseUrlChange}
+              baseUrlReadOnly={selectedPresetId === SUB2API_PRESET_ID}
               isEndpointModalOpen={isEndpointModalOpen}
               onEndpointModalToggle={setIsEndpointModalOpen}
               onCustomEndpointsChange={setDraftCustomEndpoints}
@@ -2335,6 +2338,7 @@ function ProviderFormFull({
               partnerPromotionKey={opencodePartnerPromotionKey}
               baseUrl={opencodeForm.opencodeBaseUrl}
               onBaseUrlChange={opencodeForm.handleOpencodeBaseUrlChange}
+              baseUrlReadOnly={selectedPresetId === SUB2API_PRESET_ID}
               headers={opencodeForm.opencodeHeaders}
               onHeadersChange={opencodeForm.handleOpencodeHeadersChange}
               models={opencodeForm.opencodeModels}
@@ -2371,6 +2375,7 @@ function ProviderFormFull({
             <OpenClawFormFields
               baseUrl={openclawForm.openclawBaseUrl}
               onBaseUrlChange={openclawForm.handleOpenclawBaseUrlChange}
+              baseUrlReadOnly={selectedPresetId === SUB2API_PRESET_ID}
               apiKey={openclawForm.openclawApiKey}
               onApiKeyChange={openclawForm.handleOpenclawApiKeyChange}
               category={category}
@@ -2392,6 +2397,7 @@ function ProviderFormFull({
             <HermesFormFields
               baseUrl={hermesForm.hermesBaseUrl}
               onBaseUrlChange={hermesForm.handleHermesBaseUrlChange}
+              baseUrlReadOnly={selectedPresetId === SUB2API_PRESET_ID}
               apiKey={hermesForm.hermesApiKey}
               onApiKeyChange={hermesForm.handleHermesApiKeyChange}
               category={category}

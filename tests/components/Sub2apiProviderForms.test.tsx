@@ -11,6 +11,7 @@ import {
 } from "@/config/sub2apiProviderPresets";
 import type { AppId } from "@/lib/api";
 import { useForm } from "react-hook-form";
+import { EndpointField } from "@/components/providers/forms/shared/EndpointField";
 
 const appIds: AppId[] = [
   "claude",
@@ -66,5 +67,28 @@ describe("Sub2API add-provider entries", () => {
     ).toBeInTheDocument();
     expect(screen.queryByText("Kimi")).not.toBeInTheDocument();
     expect(screen.queryByText("OpenAI Official")).not.toBeInTheDocument();
+  });
+
+  it("locks only the fixed site endpoint in the normal form", () => {
+    const Wrapper = () => {
+      const form = useForm();
+      return (
+        <Form {...form}>
+          <EndpointField
+            id="site-endpoint"
+            label="API endpoint"
+            value="https://api.ai.let5see.xyz/v1"
+            onChange={vi.fn()}
+            placeholder=""
+            readOnly
+          />
+          <input aria-label="API key" />
+        </Form>
+      );
+    };
+    render(<Wrapper />);
+
+    expect(screen.getByLabelText("API endpoint")).toHaveAttribute("readonly");
+    expect(screen.getByLabelText("API key")).not.toBeDisabled();
   });
 });

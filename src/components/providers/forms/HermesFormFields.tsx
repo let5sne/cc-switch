@@ -55,6 +55,7 @@ import type { ProviderCategory } from "@/types";
 interface HermesFormFieldsProps {
   baseUrl: string;
   onBaseUrlChange: (value: string) => void;
+  baseUrlReadOnly?: boolean;
   apiKey: string;
   onApiKeyChange: (value: string) => void;
   category?: ProviderCategory;
@@ -142,6 +143,7 @@ function AdvancedSection({
 export function HermesFormFields({
   baseUrl,
   onBaseUrlChange,
+  baseUrlReadOnly = false,
   apiKey,
   onApiKeyChange,
   category,
@@ -307,6 +309,7 @@ export function HermesFormFields({
           id="hermes-baseurl"
           value={baseUrl}
           onChange={(e) => onBaseUrlChange(e.target.value)}
+          readOnly={baseUrlReadOnly}
           onBlur={() => setBaseUrlTouched(true)}
           placeholder="https://api.example.com/v1"
           aria-invalid={showBaseUrlError}

@@ -899,6 +899,7 @@ export function ClaudeDesktopProviderForm({
               label={t("providerForm.apiEndpoint")}
               value={baseUrl}
               onChange={(v) => setBaseUrl(v)}
+              readOnly={selectedPresetId === SUB2API_PRESET_ID}
               placeholder={t("providerForm.apiEndpointPlaceholder")}
               hint={
                 needsModelMapping && apiFormat === "openai_responses"

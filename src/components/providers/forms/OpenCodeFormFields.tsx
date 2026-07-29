@@ -173,6 +173,7 @@ interface OpenCodeFormFieldsProps {
   // Base URL
   baseUrl: string;
   onBaseUrlChange: (value: string) => void;
+  baseUrlReadOnly?: boolean;
 
   // Headers
   headers: Record<string, string>;
@@ -199,6 +200,7 @@ export function OpenCodeFormFields({
   partnerPromotionKey,
   baseUrl,
   onBaseUrlChange,
+  baseUrlReadOnly = false,
   headers,
   onHeadersChange,
   models,
@@ -596,6 +598,7 @@ export function OpenCodeFormFields({
           id="opencode-baseurl"
           value={baseUrl}
           onChange={(e) => onBaseUrlChange(e.target.value)}
+          readOnly={baseUrlReadOnly}
           placeholder="https://api.example.com/v1"
         />
         <p className="text-xs text-muted-foreground">

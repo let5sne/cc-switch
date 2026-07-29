@@ -116,6 +116,7 @@ interface ClaudeFormFieldsProps {
   shouldShowSpeedTest: boolean;
   baseUrl: string;
   onBaseUrlChange: (url: string) => void;
+  baseUrlReadOnly?: boolean;
   isEndpointModalOpen: boolean;
   onEndpointModalToggle: (open: boolean) => void;
   onCustomEndpointsChange?: (endpoints: string[]) => void;
@@ -193,6 +194,7 @@ export function ClaudeFormFields({
   shouldShowSpeedTest,
   baseUrl,
   onBaseUrlChange,
+  baseUrlReadOnly = false,
   isEndpointModalOpen,
   onEndpointModalToggle,
   onCustomEndpointsChange,
@@ -770,18 +772,26 @@ export function ClaudeFormFields({
               ? t("providerForm.fullUrlHintGeminiNative")
               : undefined
           }
-          showManageButton={showEndpointTools}
+          showManageButton={showEndpointTools && !baseUrlReadOnly}
           onManageClick={
-            showEndpointTools ? () => onEndpointModalToggle(true) : undefined
+            showEndpointTools && !baseUrlReadOnly
+              ? () => onEndpointModalToggle(true)
+              : undefined
           }
-          showFullUrlToggle={showEndpointTools && !isXaiOauthPreset}
+          showFullUrlToggle={
+            showEndpointTools && !isXaiOauthPreset && !baseUrlReadOnly
+          }
           isFullUrl={isFullUrl}
           onFullUrlChange={onFullUrlChange}
+          readOnly={baseUrlReadOnly}
         />
       )}
 
       {/* 端点测速弹窗 */}
-      {shouldShowSpeedTest && showEndpointTools && isEndpointModalOpen && (
+      {shouldShowSpeedTest &&
+        showEndpointTools &&
+        !baseUrlReadOnly &&
+        isEndpointModalOpen && (
         <EndpointSpeedTest
           appId="claude"
           providerId={providerId}

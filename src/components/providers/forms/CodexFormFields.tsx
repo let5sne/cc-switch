@@ -72,6 +72,7 @@ interface CodexFormFieldsProps {
   shouldShowSpeedTest: boolean;
   codexBaseUrl: string;
   onBaseUrlChange: (url: string) => void;
+  baseUrlReadOnly?: boolean;
   isFullUrl: boolean;
   onFullUrlChange: (value: boolean) => void;
   isEndpointModalOpen: boolean;
@@ -180,6 +181,7 @@ export function CodexFormFields({
   shouldShowSpeedTest,
   codexBaseUrl,
   onBaseUrlChange,
+  baseUrlReadOnly = false,
   isFullUrl,
   onFullUrlChange,
   isEndpointModalOpen,
@@ -539,12 +541,16 @@ export function CodexFormFields({
           label={t("codexConfig.apiUrlLabel")}
           value={codexBaseUrl}
           onChange={onBaseUrlChange}
+          readOnly={baseUrlReadOnly}
           placeholder={t("providerForm.codexApiEndpointPlaceholder")}
           hint={t("providerForm.codexApiHint")}
-          showFullUrlToggle
+          showManageButton={!baseUrlReadOnly}
+          showFullUrlToggle={!baseUrlReadOnly}
           isFullUrl={isFullUrl}
           onFullUrlChange={onFullUrlChange}
-          onManageClick={() => onEndpointModalToggle(true)}
+          onManageClick={
+            baseUrlReadOnly ? undefined : () => onEndpointModalToggle(true)
+          }
         />
       )}
 
@@ -1087,7 +1093,7 @@ export function CodexFormFields({
       )}
 
       {/* 端点测速弹窗 - Codex */}
-      {shouldShowSpeedTest && isEndpointModalOpen && (
+      {shouldShowSpeedTest && !baseUrlReadOnly && isEndpointModalOpen && (
         <EndpointSpeedTest
           appId={appId}
           providerId={providerId}

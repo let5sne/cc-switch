@@ -503,6 +503,7 @@ export function GrokBuildProviderForm({
                 setBaseUrl(value);
                 syncStructuredConfig({ baseUrl: value });
               }}
+              baseUrlReadOnly={selectedPresetId === SUB2API_PRESET_ID}
               isFullUrl={isFullUrl}
               onFullUrlChange={setIsFullUrl}
               isEndpointModalOpen={isEndpointModalOpen}

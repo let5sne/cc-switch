@@ -33,6 +33,7 @@ interface GeminiFormFieldsProps {
   shouldShowSpeedTest: boolean;
   baseUrl: string;
   onBaseUrlChange: (url: string) => void;
+  baseUrlReadOnly?: boolean;
   isEndpointModalOpen: boolean;
   onEndpointModalToggle: (open: boolean) => void;
   onCustomEndpointsChange: (endpoints: string[]) => void;
@@ -61,6 +62,7 @@ export function GeminiFormFields({
   shouldShowSpeedTest,
   baseUrl,
   onBaseUrlChange,
+  baseUrlReadOnly = false,
   isEndpointModalOpen,
   onEndpointModalToggle,
   onCustomEndpointsChange,
@@ -151,10 +153,14 @@ export function GeminiFormFields({
           label={t("providerForm.apiEndpoint", { defaultValue: "API 端点" })}
           value={baseUrl}
           onChange={onBaseUrlChange}
+          readOnly={baseUrlReadOnly}
+          showManageButton={!baseUrlReadOnly}
           placeholder={t("providerForm.apiEndpointPlaceholder", {
             defaultValue: "https://your-api-endpoint.com/",
           })}
-          onManageClick={() => onEndpointModalToggle(true)}
+          onManageClick={
+            baseUrlReadOnly ? undefined : () => onEndpointModalToggle(true)
+          }
         />
       )}
 
@@ -193,7 +199,7 @@ export function GeminiFormFields({
       )}
 
       {/* 端点测速弹窗 */}
-      {shouldShowSpeedTest && isEndpointModalOpen && (
+      {shouldShowSpeedTest && !baseUrlReadOnly && isEndpointModalOpen && (
         <EndpointSpeedTest
           appId="gemini"
           providerId={providerId}
