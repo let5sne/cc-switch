@@ -46,13 +46,8 @@ export function AddProviderDialog({
   onSubmit,
 }: AddProviderDialogProps) {
   const { t } = useTranslation();
-  // OpenCode and OpenClaw don't support universal providers
-  const showUniversalTab =
-    appId !== "opencode" &&
-    appId !== "openclaw" &&
-    appId !== "hermes" &&
-    appId !== "grokbuild" &&
-    appId !== "claude-desktop";
+  // Companion edition keeps every new-provider recommendation on Sub2API.
+  const showUniversalTab = false;
   const [activeTab, setActiveTab] = useState<"app-specific" | "universal">(
     "app-specific",
   );

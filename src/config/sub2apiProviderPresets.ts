@@ -10,6 +10,7 @@ import type { GrokBuildProviderPreset } from "./grokBuildProviderPresets";
 import type { OpenCodeProviderPreset } from "./opencodeProviderPresets";
 import type { OpenClawProviderPreset } from "./openclawProviderPresets";
 import type { HermesProviderPreset } from "./hermesProviderPresets";
+import type { AppId } from "@/lib/api";
 
 export const SUB2API_PRESET_ID = "sub2api";
 export const SUB2API_NAME = "Sub2API";
@@ -118,3 +119,18 @@ export const sub2apiHermesPreset: HermesProviderPreset = {
     models: [],
   },
 };
+
+const presetsByApp = {
+  claude: sub2apiClaudePreset,
+  "claude-desktop": sub2apiClaudeDesktopPreset,
+  codex: sub2apiCodexPreset,
+  gemini: sub2apiGeminiPreset,
+  grokbuild: sub2apiGrokBuildPreset,
+  opencode: sub2apiOpenCodePreset,
+  openclaw: sub2apiOpenClawPreset,
+  hermes: sub2apiHermesPreset,
+} as const;
+
+export function getSub2apiPreset(appId: AppId) {
+  return presetsByApp[appId];
+}

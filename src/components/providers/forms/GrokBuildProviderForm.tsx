@@ -32,11 +32,11 @@ import type { ProviderFormProps, ProviderFormValues } from "./ProviderForm";
 import { BasicFormFields } from "./BasicFormFields";
 import { CodexFormFields } from "./CodexFormFields";
 import { ProviderPresetSelector } from "./ProviderPresetSelector";
+import type { GrokBuildProviderPreset } from "@/config/grokBuildProviderPresets";
 import {
-  grokBuildOfficialPreset,
-  grokBuildProviderPresets,
-  type GrokBuildProviderPreset,
-} from "@/config/grokBuildProviderPresets";
+  SUB2API_PRESET_ID,
+  sub2apiGrokBuildPreset,
+} from "@/config/sub2apiProviderPresets";
 import {
   codexApiFormatFromWireApi,
   extractCodexBaseUrl,
@@ -50,22 +50,13 @@ import {
   validateGrokBuildConfig,
 } from "@/utils/grokBuildConfig";
 import { resolveProviderIcon } from "@/utils/providerIcon";
-import { GROKBUILD_OFFICIAL_PROVIDER_ID } from "@/utils/providerCapabilities";
 
 type GrokBuildProviderFormProps = Omit<ProviderFormProps, "appId">;
 
-// 预设列表见 grokBuildProviderPresets.ts：独立维护（与 Codex 预设无联动），
-// 不含官方 / OAuth / 国产官方直连 / 纯开源托管站，默认模型为 Grok 系。
 const grokPresetEntries: Array<{
   id: string;
   preset: GrokBuildProviderPreset;
-}> = [
-  { id: GROKBUILD_OFFICIAL_PROVIDER_ID, preset: grokBuildOfficialPreset },
-  ...grokBuildProviderPresets.map((preset, index) => ({
-    id: `grokbuild-${index}`,
-    preset,
-  })),
-];
+}> = [{ id: SUB2API_PRESET_ID, preset: sub2apiGrokBuildPreset }];
 
 export const grokApiBackendFromApiFormat = (format: CodexApiFormat): string => {
   if (format === "openai_chat") return "chat_completions";
@@ -236,20 +227,6 @@ export function GrokBuildProviderForm({
       setIsPartner(false);
       setPartnerPromotionKey(undefined);
       setPresetEndpoints([]);
-      return;
-    }
-
-    if (presetId === GROKBUILD_OFFICIAL_PROVIDER_ID) {
-      // 官方登录：无 API Key / 地址 / 模型表可填，提交走 ensure seed 流程
-      form.setValue("name", grokBuildOfficialPreset.name);
-      form.setValue("websiteUrl", grokBuildOfficialPreset.websiteUrl);
-      form.setValue("icon", grokBuildOfficialPreset.icon ?? "");
-      form.setValue("iconColor", grokBuildOfficialPreset.iconColor ?? "");
-      setCategory("official");
-      setIsPartner(false);
-      setPartnerPromotionKey(undefined);
-      setPresetEndpoints([]);
-      setRawConfig("");
       return;
     }
 

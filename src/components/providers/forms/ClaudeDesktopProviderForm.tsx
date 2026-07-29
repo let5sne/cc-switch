@@ -55,10 +55,13 @@ import type {
 import type { OpenClawSuggestedDefaults } from "@/config/openclawProviderPresets";
 import {
   CLAUDE_DESKTOP_ROLE_ROUTE_IDS,
-  claudeDesktopProviderPresets,
   type ClaudeDesktopProviderPreset,
   type ClaudeDesktopRoleId,
 } from "@/config/claudeDesktopProviderPresets";
+import {
+  SUB2API_PRESET_ID,
+  sub2apiClaudeDesktopPreset,
+} from "@/config/sub2apiProviderPresets";
 import {
   fetchModelsForConfig,
   showFetchModelsError,
@@ -359,11 +362,12 @@ export function ClaudeDesktopProviderForm({
   }, [form.formState.isSubmitting, isFetchingModels, onSubmittingChange]);
 
   const presetEntries = useMemo<PresetEntry[]>(
-    () =>
-      claudeDesktopProviderPresets.map((preset, index) => ({
-        id: `claude-desktop-${index}`,
-        preset,
-      })),
+    () => [
+      {
+        id: SUB2API_PRESET_ID,
+        preset: sub2apiClaudeDesktopPreset,
+      },
+    ],
     [],
   );
 

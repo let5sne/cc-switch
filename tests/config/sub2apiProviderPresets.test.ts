@@ -52,7 +52,7 @@ describe("Sub2API provider presets", () => {
     for (const preset of presets) {
       expect(preset.name).toBe(SUB2API_NAME);
       expect(preset.websiteUrl).toBe(SUB2API_ORIGIN);
-      expect(preset.isOfficial).not.toBe(true);
+      expect("isOfficial" in preset && preset.isOfficial).not.toBe(true);
       expect(preset.isPartner).not.toBe(true);
       expect(preset.partnerPromotionKey).toBeUndefined();
     }
