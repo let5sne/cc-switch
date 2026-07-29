@@ -8,6 +8,7 @@ import {
   SUB2API_ORIGIN,
   SUB2API_PRESET_ID,
   SUB2API_V1_BASE_URL,
+  getSub2apiConnection,
   sub2apiClaudeDesktopPreset,
   sub2apiClaudePreset,
   sub2apiCodexPreset,
@@ -111,5 +112,56 @@ describe("Sub2API provider presets", () => {
       api_mode: "codex_responses",
       models: [],
     });
+  });
+
+  it("extracts submitted keys and chooses the app-specific models endpoint", () => {
+    expect(
+      getSub2apiConnection("claude", {
+        env: { ANTHROPIC_AUTH_TOKEN: "claude-key" },
+      }),
+    ).toEqual({
+      apiKey: "claude-key",
+      baseUrl: SUB2API_ORIGIN,
+      modelsUrl: SUB2API_MODELS_URL,
+    });
+    expect(
+      getSub2apiConnection("claude-desktop", {
+        env: { ANTHROPIC_API_KEY: "desktop-key" },
+      }),
+    ).toMatchObject({ apiKey: "desktop-key" });
+    expect(
+      getSub2apiConnection("codex", {
+        auth: { OPENAI_API_KEY: "codex-key" },
+      }),
+    ).toMatchObject({
+      apiKey: "codex-key",
+      baseUrl: SUB2API_V1_BASE_URL,
+      modelsUrl: SUB2API_MODELS_URL,
+    });
+    expect(
+      getSub2apiConnection("gemini", {
+        env: { GEMINI_API_KEY: "gemini-key" },
+      }),
+    ).toEqual({
+      apiKey: "gemini-key",
+      baseUrl: SUB2API_GEMINI_BASE_URL,
+      modelsUrl: SUB2API_GEMINI_MODELS_URL,
+    });
+    expect(
+      getSub2apiConnection("grokbuild", {
+        config: `[model."grok-4.5"]\napi_key = "grok-key"`,
+      }),
+    ).toMatchObject({ apiKey: "grok-key" });
+    expect(
+      getSub2apiConnection("opencode", {
+        options: { apiKey: "opencode-key" },
+      }),
+    ).toMatchObject({ apiKey: "opencode-key" });
+    expect(
+      getSub2apiConnection("openclaw", { apiKey: "openclaw-key" }),
+    ).toMatchObject({ apiKey: "openclaw-key" });
+    expect(
+      getSub2apiConnection("hermes", { api_key: "hermes-key" }),
+    ).toMatchObject({ apiKey: "hermes-key" });
   });
 });

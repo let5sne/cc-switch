@@ -11,6 +11,7 @@ import type { OpenCodeProviderPreset } from "./opencodeProviderPresets";
 import type { OpenClawProviderPreset } from "./openclawProviderPresets";
 import type { HermesProviderPreset } from "./hermesProviderPresets";
 import type { AppId } from "@/lib/api";
+import { parseGrokBuildConfig } from "@/utils/grokBuildConfig";
 
 export const SUB2API_PRESET_ID = "sub2api";
 export const SUB2API_NAME = "Sub2API";
@@ -133,4 +134,66 @@ const presetsByApp = {
 
 export function getSub2apiPreset(appId: AppId) {
   return presetsByApp[appId];
+}
+
+const asRecord = (value: unknown): Record<string, unknown> | undefined =>
+  value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : undefined;
+
+const asString = (value: unknown): string =>
+  typeof value === "string" ? value.trim() : "";
+
+export interface Sub2apiConnection {
+  apiKey: string;
+  baseUrl: string;
+  modelsUrl: string;
+}
+
+export function getSub2apiConnection(
+  appId: AppId,
+  settingsConfig: Record<string, unknown>,
+): Sub2apiConnection {
+  const env = asRecord(settingsConfig.env);
+  let apiKey = "";
+
+  switch (appId) {
+    case "claude":
+    case "claude-desktop":
+      apiKey =
+        asString(env?.ANTHROPIC_AUTH_TOKEN) ||
+        asString(env?.ANTHROPIC_API_KEY);
+      break;
+    case "codex":
+      apiKey = asString(asRecord(settingsConfig.auth)?.OPENAI_API_KEY);
+      break;
+    case "gemini":
+      apiKey =
+        asString(env?.GEMINI_API_KEY) || asString(env?.GOOGLE_API_KEY);
+      break;
+    case "grokbuild":
+      apiKey = parseGrokBuildConfig(asString(settingsConfig.config)).apiKey;
+      break;
+    case "opencode":
+      apiKey = asString(asRecord(settingsConfig.options)?.apiKey);
+      break;
+    case "openclaw":
+      apiKey = asString(settingsConfig.apiKey);
+      break;
+    case "hermes":
+      apiKey = asString(settingsConfig.api_key);
+      break;
+  }
+
+  return {
+    apiKey,
+    baseUrl:
+      appId === "gemini"
+        ? SUB2API_GEMINI_BASE_URL
+        : appId === "claude" || appId === "claude-desktop"
+          ? SUB2API_ORIGIN
+          : SUB2API_V1_BASE_URL,
+    modelsUrl:
+      appId === "gemini" ? SUB2API_GEMINI_MODELS_URL : SUB2API_MODELS_URL,
+  };
 }

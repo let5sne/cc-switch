@@ -23,6 +23,16 @@ import { extractGrokBuildBaseUrl } from "@/utils/grokBuildConfig";
 import { GROKBUILD_OFFICIAL_PROVIDER_ID } from "@/utils/providerCapabilities";
 import type { OpenClawSuggestedDefaults } from "@/config/openclawProviderPresets";
 import type { UniversalProviderPreset } from "@/config/universalProviderPresets";
+import {
+  getSub2apiConnection,
+  SUB2API_HEALTH_URL,
+  SUB2API_PRESET_ID,
+} from "@/config/sub2apiProviderPresets";
+import { vscodeApi } from "@/lib/api/vscode";
+import {
+  fetchModelsForConfig,
+  showFetchModelsError,
+} from "@/lib/api/model-fetch";
 
 interface AddProviderDialogProps {
   open: boolean;
@@ -110,6 +120,69 @@ export function AddProviderDialog({
         string,
         unknown
       >;
+
+      if (values.presetId === SUB2API_PRESET_ID) {
+        const connection = getSub2apiConnection(appId, parsedConfig);
+        if (!connection.apiKey) {
+          toast.error(
+            t("providerForm.fetchModelsNeedApiKey", {
+              defaultValue: "请先填写 API Key",
+            }),
+          );
+          return;
+        }
+
+        let health;
+        try {
+          [health] = await vscodeApi.testApiEndpoints(
+            [SUB2API_HEALTH_URL],
+            { timeoutSecs: 8 },
+          );
+        } catch {
+          toast.error(
+            t("sub2api.healthFailed", {
+              defaultValue: "Sub2API 暂时不可用，请稍后重试",
+            }),
+          );
+          return;
+        }
+        if (
+          !health?.status ||
+          health.status < 200 ||
+          health.status >= 300 ||
+          health.error
+        ) {
+          toast.error(
+            t("sub2api.healthFailed", {
+              defaultValue: "Sub2API 暂时不可用，请稍后重试",
+            }),
+          );
+          return;
+        }
+
+        try {
+          const models = await fetchModelsForConfig(
+            connection.baseUrl,
+            connection.apiKey,
+            false,
+            connection.modelsUrl,
+          );
+          if (models.length === 0) {
+            toast.error(
+              t("sub2api.noModels", {
+                defaultValue: "当前 API Key 未分配可用模型",
+              }),
+            );
+            return;
+          }
+        } catch (error) {
+          showFetchModelsError(error, t, {
+            hasBaseUrl: true,
+            hasApiKey: true,
+          });
+          return;
+        }
+      }
 
       // 构造基础提交数据
       const providerData: Omit<Provider, "id"> & {
@@ -311,7 +384,7 @@ export function AddProviderDialog({
       await onSubmit(providerData);
       onOpenChange(false);
     },
-    [appId, onSubmit, onOpenChange],
+    [appId, onSubmit, onOpenChange, t],
   );
 
   const footer =

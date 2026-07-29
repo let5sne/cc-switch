@@ -21,12 +21,20 @@ pub struct FetchedModel {
 #[derive(Debug, Deserialize)]
 struct ModelsResponse {
     data: Option<Vec<ModelEntry>>,
+    models: Option<Vec<GeminiModelEntry>>,
 }
 
 #[derive(Debug, Deserialize)]
 struct ModelEntry {
     id: String,
     owned_by: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+struct GeminiModelEntry {
+    name: String,
+    #[serde(rename = "displayName")]
+    display_name: Option<String>,
 }
 
 const FETCH_TIMEOUT_SECS: u64 = 15;
@@ -91,20 +99,11 @@ pub async fn fetch_models(
         let status = response.status();
 
         if status.is_success() {
-            let resp: ModelsResponse = response
-                .json()
+            let body = response
+                .text()
                 .await
-                .map_err(|e| format!("Failed to parse response: {e}"))?;
-
-            let mut models: Vec<FetchedModel> = resp
-                .data
-                .unwrap_or_default()
-                .into_iter()
-                .map(|m| FetchedModel {
-                    id: m.id,
-                    owned_by: m.owned_by,
-                })
-                .collect();
+                .map_err(|e| format!("Failed to read response: {e}"))?;
+            let mut models = parse_models_response(&body)?;
 
             models.sort_by(|a, b| a.id.cmp(&b.id));
             return Ok(models);
@@ -124,6 +123,34 @@ pub async fn fetch_models(
         "All candidates failed: {}",
         last_err.unwrap_or_else(|| "no candidates".to_string())
     ))
+}
+
+fn parse_models_response(body: &str) -> Result<Vec<FetchedModel>, String> {
+    let resp: ModelsResponse =
+        serde_json::from_str(body).map_err(|e| format!("Failed to parse response: {e}"))?;
+    let mut models: Vec<FetchedModel> = resp
+        .data
+        .unwrap_or_default()
+        .into_iter()
+        .map(|model| FetchedModel {
+            id: model.id,
+            owned_by: model.owned_by,
+        })
+        .collect();
+    models.extend(
+        resp.models
+            .unwrap_or_default()
+            .into_iter()
+            .map(|model| FetchedModel {
+                id: model
+                    .name
+                    .strip_prefix("models/")
+                    .unwrap_or(&model.name)
+                    .to_string(),
+                owned_by: model.display_name,
+            }),
+    );
+    Ok(models)
 }
 
 /// 构造「模型列表端点」的候选 URL 列表
@@ -238,6 +265,22 @@ fn ends_with_version_segment(url: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_parse_openai_and_gemini_models_responses() {
+        let openai =
+            parse_models_response(r#"{"data":[{"id":"openai-model","owned_by":"site"}]}"#)
+                .unwrap();
+        assert_eq!(openai[0].id, "openai-model");
+        assert_eq!(openai[0].owned_by.as_deref(), Some("site"));
+
+        let gemini = parse_models_response(
+            r#"{"models":[{"name":"models/gemini-model","displayName":"Gemini Model"}]}"#,
+        )
+        .unwrap();
+        assert_eq!(gemini[0].id, "gemini-model");
+        assert_eq!(gemini[0].owned_by.as_deref(), Some("Gemini Model"));
+    }
 
     #[test]
     fn test_candidates_plain_root() {
