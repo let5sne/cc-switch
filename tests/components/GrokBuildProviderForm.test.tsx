@@ -24,7 +24,7 @@ vi.mock("@/components/JsonEditor", () => ({
 }));
 
 describe("GrokBuildProviderForm", () => {
-  it("offers curated Grok Build presets and applies one", async () => {
+  it("offers only the Sub2API preset and applies it", async () => {
     const user = userEvent.setup();
     const { container } = render(
       <GrokBuildProviderForm
@@ -34,18 +34,16 @@ describe("GrokBuildProviderForm", () => {
       />,
     );
 
-    // 国产官方直连（cn_official）不在 Grok Build 预设列表里
-    expect(screen.queryByRole("button", { name: /BytePlus/ })).toBeNull();
-    expect(screen.queryByRole("button", { name: /Kimi/ })).toBeNull();
-
-    await user.click(screen.getByRole("button", { name: /PatewayAI/ }));
+    expect(screen.queryByRole("button", { name: /PatewayAI/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: /APIKEY\.FUN/ })).toBeNull();
+    await user.click(screen.getByRole("button", { name: /Sub2API/ }));
 
     const baseUrlInput =
       container.querySelector<HTMLInputElement>("#codexBaseUrl");
     const nameInput =
       container.querySelector<HTMLInputElement>('input[name="name"]');
-    expect(baseUrlInput?.value).toBe("https://api.pateway.ai/v1");
-    expect(nameInput?.value).toBe("PatewayAI");
+    expect(baseUrlInput?.value).toBe("https://api.ai.let5see.xyz/v1");
+    expect(nameInput?.value).toBe("Sub2API");
   });
 
   it("submits a complete config.toml payload with Grok defaults", async () => {
@@ -99,7 +97,7 @@ describe("GrokBuildProviderForm", () => {
     expect(grokApiBackendFromApiFormat("anthropic")).toBe("messages");
     expect(grokApiBackendFromApiFormat("openai_responses")).toBe("responses");
 
-    // 组件级接线用带显式 apiFormat 的 Responses 预设验证
+    // 组件级接线用固定的 Sub2API Responses 预设验证
     const user = userEvent.setup();
     const onSubmit = vi.fn();
     render(
@@ -110,7 +108,7 @@ describe("GrokBuildProviderForm", () => {
       />,
     );
 
-    await user.click(screen.getByRole("button", { name: /APIKEY\.FUN/ }));
+    await user.click(screen.getByRole("button", { name: /Sub2API/ }));
     await user.type(screen.getByLabelText("API Key"), "secret-key");
     await user.click(screen.getByRole("button", { name: "Save" }));
 
@@ -122,7 +120,7 @@ describe("GrokBuildProviderForm", () => {
     const selected = config.model[config.models.default];
     expect(selected.api_backend).toBe("responses");
     expect(selected.model).toBe("grok-4.5");
-    expect(selected.base_url).toBe("https://api.apikey.fun/v1");
+    expect(selected.base_url).toBe("https://api.ai.let5see.xyz/v1");
   });
 
   it("renders localized validation feedback for malformed TOML", async () => {
