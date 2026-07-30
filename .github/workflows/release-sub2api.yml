@@ -20,6 +20,8 @@ jobs:
   build:
     name: Build ${{ matrix.label }}
     runs-on: ${{ matrix.os }}
+    env:
+      TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ""
     strategy:
       fail-fast: false
       matrix:
