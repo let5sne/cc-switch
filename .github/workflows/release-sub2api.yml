@@ -1,0 +1,216 @@
+name: Release Sub2API Companion
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Release version from package.json
+        required: true
+        default: 3.18.1
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sub2api-companion-${{ inputs.version }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build ${{ matrix.label }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-2022
+            label: Windows x64
+            arch: x64
+          - os: windows-11-arm
+            label: Windows ARM64
+            arch: arm64
+          - os: macos-14
+            label: macOS Universal
+            arch: universal
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "20"
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Add Windows ARM64 target
+        if: matrix.arch == 'arm64'
+        shell: pwsh
+        run: rustup target add aarch64-pc-windows-msvc
+
+      - name: Add macOS targets
+        if: matrix.arch == 'universal'
+        run: rustup target add aarch64-apple-darwin x86_64-apple-darwin
+
+      - name: Setup pnpm
+        if: matrix.arch != 'arm64'
+        uses: pnpm/action-setup@v6
+        with:
+          version: 10.12.3
+          run_install: false
+
+      - name: Setup pnpm on Windows ARM64
+        if: matrix.arch == 'arm64'
+        shell: pwsh
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.12.3 --activate
+
+      - name: Setup LLVM on Windows ARM64
+        if: matrix.arch == 'arm64'
+        shell: pwsh
+        run: |
+          $llvmBin = 'C:\Program Files\LLVM\bin'
+          if (-not (Test-Path $llvmBin)) {
+            throw "LLVM not found at $llvmBin"
+          }
+          "LIBCLANG_PATH=$llvmBin" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          "CLANG_PATH=$llvmBin\clang.exe" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          $llvmBin | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Verify release version and signing key
+        shell: bash
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+        run: |
+          test "$(node -p "require('./package.json').version")" = "$RELEASE_VERSION"
+          test -n "$TAURI_SIGNING_PRIVATE_KEY"
+
+      - name: Build Windows x64
+        if: matrix.arch == 'x64'
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+        run: pnpm tauri build --bundles msi
+
+      - name: Build Windows ARM64
+        if: matrix.arch == 'arm64'
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+        run: pnpm tauri build --target aarch64-pc-windows-msvc --bundles msi
+
+      - name: Build macOS Universal
+        if: matrix.arch == 'universal'
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+        run: pnpm tauri build --target universal-apple-darwin --bundles dmg
+
+      - name: Collect Windows assets
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+        run: |
+          New-Item -ItemType Directory -Force -Path release-assets | Out-Null
+          $targetRoot = if ('${{ matrix.arch }}' -eq 'arm64') {
+            'src-tauri/target/aarch64-pc-windows-msvc/release'
+          } else {
+            'src-tauri/target/release'
+          }
+          $msi = Get-ChildItem -Path "$targetRoot/bundle/msi" -Filter *.msi -Recurse | Select-Object -First 1
+          if ($null -eq $msi) {
+            throw "Windows MSI not found"
+          }
+          $suffix = if ('${{ matrix.arch }}' -eq 'arm64') { 'arm64' } else { 'x64' }
+          $name = "CC-Switch-Sub2API-v$env:RELEASE_VERSION-Windows-$suffix.msi"
+          Copy-Item $msi.FullName "release-assets/$name"
+          Copy-Item "$($msi.FullName).sig" "release-assets/$name.sig"
+
+      - name: Collect macOS assets
+        if: runner.os == 'macOS'
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          mkdir -p release-assets
+          bundle_root="src-tauri/target/universal-apple-darwin/release/bundle"
+          dmg=$(find "$bundle_root/dmg" -maxdepth 1 -name "*.dmg" -type f | head -1)
+          updater=$(find "$bundle_root/macos" -maxdepth 1 -name "*.app.tar.gz" -type f | head -1)
+          dmg_name="CC-Switch-Sub2API-v${RELEASE_VERSION}-macOS-universal.dmg"
+          updater_name="CC-Switch-Sub2API-v${RELEASE_VERSION}-macOS-universal.app.tar.gz"
+          cp "$dmg" "release-assets/$dmg_name"
+          cp "$updater" "release-assets/$updater_name"
+          cp "$updater.sig" "release-assets/$updater_name.sig"
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: sub2api-${{ matrix.arch }}
+          path: release-assets/*
+          if-no-files-found: error
+
+  publish:
+    name: Publish release
+    needs: build
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: sub2api-*
+          path: release-assets
+          merge-multiple: true
+
+      - name: Generate checksums and updater manifest
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+          RELEASE_BASE_URL: https://api.ai.let5see.xyz/downloads/cc-switch/v${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          cd release-assets
+          sha256sum *.dmg *.msi > SHA256SUMS.txt
+          node <<'NODE'
+          const fs = require("node:fs");
+          const path = require("node:path");
+
+          const version = process.env.RELEASE_VERSION;
+          const baseUrl = process.env.RELEASE_BASE_URL;
+          const signature = (name) =>
+            fs.readFileSync(path.join(process.cwd(), `${name}.sig`), "utf8").trim();
+          const entry = (name) => ({
+            signature: signature(name),
+            url: `${baseUrl}/${name}`,
+          });
+          const mac = `CC-Switch-Sub2API-v${version}-macOS-universal.app.tar.gz`;
+          const winX64 = `CC-Switch-Sub2API-v${version}-Windows-x64.msi`;
+          const winArm64 = `CC-Switch-Sub2API-v${version}-Windows-arm64.msi`;
+          const manifest = {
+            version,
+            notes: `CC Switch Sub2API Companion v${version}`,
+            pub_date: new Date().toISOString(),
+            platforms: {
+              "darwin-aarch64": entry(mac),
+              "darwin-x86_64": entry(mac),
+              "windows-x86_64": entry(winX64),
+              "windows-aarch64": entry(winArm64),
+            },
+          };
+          fs.writeFileSync("latest.json", `${JSON.stringify(manifest, null, 2)}\n`);
+          NODE
+
+      - uses: softprops/action-gh-release@v3
+        with:
+          tag_name: v${{ inputs.version }}
+          target_commitish: ${{ github.sha }}
+          name: CC Switch Sub2API Companion v${{ inputs.version }}
+          make_latest: true
+          prerelease: false
+          body: |
+            Sub2API 配套版，仅保留 Sub2API 与自定义配置。
+
+            - Windows x64：MSI
+            - Windows ARM64：MSI
+            - macOS：Intel / Apple Silicon 通用 DMG
+
+            Tauri 自动更新包使用独立签名；Windows 与 macOS 安装包暂未使用微软/苹果开发者证书进行系统级签名。
+          files: release-assets/*
