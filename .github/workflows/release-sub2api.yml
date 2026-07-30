@@ -107,7 +107,7 @@ jobs:
         if: matrix.arch == 'universal'
         env:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-        run: pnpm tauri build --target universal-apple-darwin --bundles dmg
+        run: pnpm tauri build --target universal-apple-darwin --bundles app,dmg
 
       - name: Collect Windows assets
         if: runner.os == 'Windows'
