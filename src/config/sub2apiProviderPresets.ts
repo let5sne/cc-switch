@@ -53,11 +53,7 @@ export const sub2apiClaudeDesktopPreset: ClaudeDesktopProviderPreset = {
 export const sub2apiCodexPreset: CodexProviderPreset = {
   ...common,
   auth: generateThirdPartyAuth(""),
-  config: generateThirdPartyConfig(
-    SUB2API_NAME,
-    SUB2API_V1_BASE_URL,
-    "",
-  ),
+  config: generateThirdPartyConfig(SUB2API_NAME, SUB2API_V1_BASE_URL, ""),
   apiFormat: "openai_responses",
   endpointCandidates: [SUB2API_V1_BASE_URL],
 };
@@ -77,11 +73,7 @@ export const sub2apiGeminiPreset: GeminiProviderPreset = {
 export const sub2apiGrokBuildPreset: GrokBuildProviderPreset = {
   ...common,
   auth: generateThirdPartyAuth(""),
-  config: generateThirdPartyConfig(
-    SUB2API_NAME,
-    SUB2API_V1_BASE_URL,
-    "",
-  ),
+  config: generateThirdPartyConfig(SUB2API_NAME, SUB2API_V1_BASE_URL, ""),
   apiFormat: "openai_responses",
   endpointCandidates: [SUB2API_V1_BASE_URL],
 };
@@ -161,15 +153,13 @@ export function getSub2apiConnection(
     case "claude":
     case "claude-desktop":
       apiKey =
-        asString(env?.ANTHROPIC_AUTH_TOKEN) ||
-        asString(env?.ANTHROPIC_API_KEY);
+        asString(env?.ANTHROPIC_AUTH_TOKEN) || asString(env?.ANTHROPIC_API_KEY);
       break;
     case "codex":
       apiKey = asString(asRecord(settingsConfig.auth)?.OPENAI_API_KEY);
       break;
     case "gemini":
-      apiKey =
-        asString(env?.GEMINI_API_KEY) || asString(env?.GOOGLE_API_KEY);
+      apiKey = asString(env?.GEMINI_API_KEY) || asString(env?.GOOGLE_API_KEY);
       break;
     case "grokbuild":
       apiKey = parseGrokBuildConfig(asString(settingsConfig.config)).apiKey;

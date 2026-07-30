@@ -792,19 +792,19 @@ export function ClaudeFormFields({
         showEndpointTools &&
         !baseUrlReadOnly &&
         isEndpointModalOpen && (
-        <EndpointSpeedTest
-          appId="claude"
-          providerId={providerId}
-          value={baseUrl}
-          onChange={onBaseUrlChange}
-          initialEndpoints={speedTestEndpoints}
-          visible={isEndpointModalOpen}
-          onClose={() => onEndpointModalToggle(false)}
-          autoSelect={autoSelect}
-          onAutoSelectChange={onAutoSelectChange}
-          onCustomEndpointsChange={onCustomEndpointsChange}
-        />
-      )}
+          <EndpointSpeedTest
+            appId="claude"
+            providerId={providerId}
+            value={baseUrl}
+            onChange={onBaseUrlChange}
+            initialEndpoints={speedTestEndpoints}
+            visible={isEndpointModalOpen}
+            onClose={() => onEndpointModalToggle(false)}
+            autoSelect={autoSelect}
+            onAutoSelectChange={onAutoSelectChange}
+            onCustomEndpointsChange={onCustomEndpointsChange}
+          />
+        )}
 
       {shouldShowModelSelector && (
         <Collapsible open={advancedExpanded} onOpenChange={setAdvancedExpanded}>

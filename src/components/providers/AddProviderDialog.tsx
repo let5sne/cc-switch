@@ -134,10 +134,9 @@ export function AddProviderDialog({
 
         let health;
         try {
-          [health] = await vscodeApi.testApiEndpoints(
-            [SUB2API_HEALTH_URL],
-            { timeoutSecs: 8 },
-          );
+          [health] = await vscodeApi.testApiEndpoints([SUB2API_HEALTH_URL], {
+            timeoutSecs: 8,
+          });
         } catch {
           toast.error(
             t("sub2api.healthFailed", {

@@ -137,19 +137,16 @@ fn parse_models_response(body: &str) -> Result<Vec<FetchedModel>, String> {
             owned_by: model.owned_by,
         })
         .collect();
-    models.extend(
-        resp.models
-            .unwrap_or_default()
-            .into_iter()
-            .map(|model| FetchedModel {
-                id: model
-                    .name
-                    .strip_prefix("models/")
-                    .unwrap_or(&model.name)
-                    .to_string(),
-                owned_by: model.display_name,
-            }),
-    );
+    models.extend(resp.models.unwrap_or_default().into_iter().map(|model| {
+        FetchedModel {
+            id: model
+                .name
+                .strip_prefix("models/")
+                .unwrap_or(&model.name)
+                .to_string(),
+            owned_by: model.display_name,
+        }
+    }));
     Ok(models)
 }
 
@@ -269,8 +266,7 @@ mod tests {
     #[test]
     fn test_parse_openai_and_gemini_models_responses() {
         let openai =
-            parse_models_response(r#"{"data":[{"id":"openai-model","owned_by":"site"}]}"#)
-                .unwrap();
+            parse_models_response(r#"{"data":[{"id":"openai-model","owned_by":"site"}]}"#).unwrap();
         assert_eq!(openai[0].id, "openai-model");
         assert_eq!(openai[0].owned_by.as_deref(), Some("site"));
 
